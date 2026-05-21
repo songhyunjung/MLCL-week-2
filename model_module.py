@@ -15,15 +15,20 @@ class CaptioningSystem:
             tokenizer=self.tokenizer
         )
         
-        # [수정 핵심 1] Mapping Network(통역사)와 GPT-2(언어 모델) 전체의 잠금을 완전히 해제합니다.
-        for param in self.model.clip_project.parameters():
-            param.requires_grad = True
-            
+        # [논문 수펙 반영 핵심 1] CLIP과 GPT-2는 완벽하게 얼립니다. (Frozen Encoders)
         for param in self.model.gpt.parameters():
+            param.requires_grad = False
+            
+        # [논문 스펙 반영 핵심 2] 오직 가벼운 Mapping Network만 학습을 허용합니다.
+        for param in self.model.clip_project.parameters():
             param.requires_grad = True
             
         self.model.to(config.DEVICE)
         self.clip_model, self.preprocess = clip.load("ViT-B/32", device=config.DEVICE)
+
+        # 변동 파라미터가 매핑 네트워크로 제한되므로 안전한 디버깅 출력
+        trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        print(f"⚡ [Paper Setup] Number of Trainable Parameters: {trainable_params / 1e6:.2f}M")
 
     def get_loss(self, images, tokens, mask):
         images = images.to(self.config.DEVICE) 
