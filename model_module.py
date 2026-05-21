@@ -15,20 +15,15 @@ class CaptioningSystem:
             tokenizer=self.tokenizer
         )
         
-        # [성능 향상 핵심] 라이브러리 내부에 걸려있는 GPT-2 가중치 동결을 강제로 전면 해제합니다.
+        # [수정 핵심 1] Mapping Network(통역사)와 GPT-2(언어 모델) 전체의 잠금을 완전히 해제합니다.
+        for param in self.model.clip_project.parameters():
+            param.requires_grad = True
+            
         for param in self.model.gpt.parameters():
             param.requires_grad = True
             
         self.model.to(config.DEVICE)
         self.clip_model, self.preprocess = clip.load("ViT-B/32", device=config.DEVICE)
-
-        # 레이어별 차등 학습률(Layer-wise Learning Rate) 설정 인터페이스 구현
-        # 새로 타깃 도메인을 배워야 하는 매핑 네트워크(clip_project)는 기존 학습률을 그대로 쓰고,
-        # 이미 사전 학습이 잘 된 gpt 레이어는 상향된 LR의 50% 수준만 주어 텍스트 지식 붕괴를 예방합니다.
-        self.optimizer_grouped_parameters = [
-            {"params": self.model.clip_project.parameters(), "lr": config.LEARNING_RATE},
-            {"params": self.model.gpt.parameters(), "lr": config.LEARNING_RATE * 0.5}
-        ]
 
     def get_loss(self, images, tokens, mask):
         images = images.to(self.config.DEVICE) 
