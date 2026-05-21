@@ -7,8 +7,8 @@ class Config:
     DEVICE = f"cuda:{GPU_ID}" if torch.cuda.is_available() else "cpu"
     
     # ClearML 프로젝트 환경 설정
-    PROJECT_NAME = "Week2_MultiModal"
-    TASK_NAME = "ClipCap_Refactored_Exp"
+    PROJECT_NAME = "MLCL_Week2"
+    TASK_NAME = "ClipCap_MAPPER"
     
     # Hugging Face 모델 및 데이터셋 고유 명칭
     MODEL_NAME = "michelecafagna26/clipcap-base-captioning-ft-hl-scenes"
